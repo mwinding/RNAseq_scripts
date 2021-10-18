@@ -39,7 +39,7 @@ genelist_names = ['kis', 'Kdm5', 'Top3B', 'Nhe3', 'row', 'Rim', 'Abca3', 'Ube3a'
                     'ena', 'Scamp']
 
 # upset plots
-celltypes = [ct.Celltype(gene, seq_data.matrix[seq_data.matrix.loc[:, gene]>threshold].index) for gene in genelist]
+celltypes = [ct.Celltype(genelist_names[i], seq_data.matrix[seq_data.matrix.loc[:, gene]>threshold].index) for i, gene in enumerate(genelist)]
 celltypes = ct.Celltype_Analyzer(celltypes)
 cat_types, _, _ = celltypes.upset_members(plot_upset=False, path='plots/genelist_upset.pdf')
 
@@ -99,5 +99,21 @@ sns.scatterplot(data=data2, x='UMAP1', y='UMAP2', hue = 'overlap', s=s, linewidt
 plt.legend(bbox_to_anchor=(1.025, 1), borderaxespad=0)
 ax.set(xticks=[], yticks=[])
 fig.savefig('plots/overlap_expression_20min-combo.pdf', format='pdf', bbox_inches='tight')
+
+# %%
+# all pairwise permutations of genelists compared to top overlap hits
+import itertools
+
+core_neurons = list(data[data.overlap>=20].index)
+
+celltype_perm = list(itertools.combinations(celltypes.Celltypes, 2))
+celltype_perm = [[x[0].get_name(), x[1].get_name(), 
+                list(np.intersect1d(x[0].get_skids(), x[1].get_skids())),
+                list(np.intersect1d(list(np.intersect1d(x[0].get_skids(), x[1].get_skids())), core_neurons)),
+                list(np.setdiff1d(list(np.intersect1d(x[0].get_skids(), x[1].get_skids())), core_neurons))] for x in celltype_perm]
+
+celltype_perm = pd.DataFrame(celltype_perm, columns = ['gene1', 'gene2', 'intersection', 'core_neurons', 'noncore_neurons'])
+celltype_perm['fraction_core'] = [len(x)/len(core_neurons) for x in celltype_perm.core_neurons]
+celltype_perm['fraction_noncore'] = [len(celltype_perm.noncore_neurons.loc[x])/len(celltype_perm.intersection.loc[x]) for x in celltype_perm.index]
 
 # %%
