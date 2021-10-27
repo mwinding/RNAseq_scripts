@@ -12,6 +12,14 @@ import polyseq as pseq
 import umap
 import seaborn as sns
 
+# allows text to be editable in Illustrator
+plt.rcParams['pdf.fonttype'] = 42
+plt.rcParams['ps.fonttype'] = 42
+
+# font settings
+plt.rcParams['font.size'] = 6
+plt.rcParams['font.family'] = 'arial'
+
 gene_path = 'data/Sprecher_dataset/GSE134722_FirstInstarLarvalBrainNormalCondition_finalaggr_10X_genes.tsv'
 seq_matrix_path = 'data/Sprecher_dataset/GSE134722_FirstInstarLarvalBrainNormalCondition_finalaggr_10X_matrix.mtx.gz'
 
@@ -31,12 +39,16 @@ threshold = 0
 genelist = ['FBgn0266557', 'FBgn0031759', 'FBgn0026015', 'FBgn0028703', 'FBgn0033998', 'FBgn0053547', 'FBgn0031170', 'FBgn0061469', 'FBgn0005386', 'FBgn0038975', 
             'FBgn0040752', 'FBgn0083963', 'FBgn0031030', 'FBgn0011739', 'FBgn0013759', 'FBgn0013983', 'FBgn0261456', 'FBgn0263352', 'FBgn0266098', 'FBgn0083975',
             'FBgn0043362', 'FBgn0263289', 'FBgn0031866', 'FBgn0020251', 'FBgn0003256', 'FBgn0026317', 'FBgn0250786', 'FBgn0010333', 'FBgn0034136', 'FBgn0028734',
-            'FBgn0000578', 'FBgn0040285'] 
+            'FBgn0000578', 'FBgn0040285', 'FBgn0015269', 'FBgn0005198', 'FBgn0020647'] 
 
 genelist_names = ['kis', 'Kdm5', 'Top3B', 'Nhe3', 'row', 'Rim', 'Abca3', 'Ube3a', 'ash1', 'Nrx-1', 
-                    'Prosap', 'Nlg3', 'Tao', 'wts', 'CASK', 'imd', 'hpo', 'Unr', 'rg', 'Nlg4',
+                    'SHANK-Prosap', 'Nlg3', 'Tao', 'wts', 'CASK', 'imd', 'hpo', 'Unr', 'rg', 'Nlg4',
                     'bchs', 'scrib', 'Nlg2', 'sfl', 'rl', 'Tsc1', 'Chd1', 'Rac1', 'DAT', 'Fmr1',
-                    'ena', 'Scamp']
+                    'ena', 'Scamp', 'Nf1', 'TSC2-gig', 'PACS-KrT95D']
+
+# monogenic ASD genes
+mono_genelist = ['FBgn0028734', 'FBgn0026317', 'FBgn0005198', 'FBgn0040752', 'FBgn0015269']
+mono_genelist_names = ['Fmr1', 'TSC1', 'TSC2-gig', 'SHANK-Prosap', 'Nf1']
 
 # upset plots
 celltypes = [ct.Celltype(genelist_names[i], seq_data.matrix[seq_data.matrix.loc[:, gene]>threshold].index) for i, gene in enumerate(genelist)]
@@ -70,7 +82,7 @@ n_rows = 6
 n_cols = 6
 fig, axs = plt.subplots(n_rows,n_cols, figsize = (2*len(genelist), 2*len(genelist)))
 plt.subplots_adjust(wspace=0, hspace=0)
-for i, gene in enumerate(genelist + ['','','','']):
+for i, gene in enumerate(genelist + ['']):
     inds = np.unravel_index(i, shape=(n_rows, n_cols))
     ax = axs[inds]
     if(gene==''):
@@ -84,18 +96,19 @@ for i, gene in enumerate(genelist + ['','','','']):
         ax.axis('off')
 fig.savefig('plots/all_expression_plot.pdf', format='pdf', bbox_inches='tight')
 
+import cmasher as cmr
 # overlap of gene expression plot
 fig, ax = plt.subplots(1,1, figsize=figsize)
-sns.scatterplot(data=data, x='UMAP1', y='UMAP2', hue='overlap', s=s, linewidth=0, alpha=0.5, ax=ax)
+sns.scatterplot(data=data, x='UMAP1', y='UMAP2', hue='overlap', s=s, linewidth=0, alpha=0.5, ax=ax, palette=cmr.ember)
 plt.legend(bbox_to_anchor=(1.025, 1), borderaxespad=0)
 ax.set(xticks=[], yticks=[])
 fig.savefig('plots/overlap_expression.pdf', format='pdf', bbox_inches='tight')
 
 # overlap plot with threshold
 data2 = data.copy()
-data2.loc[data2.overlap<20, 'overlap']=0
+data2.loc[data2.overlap<21, 'overlap']=0
 fig, ax = plt.subplots(1,1, figsize=figsize)
-sns.scatterplot(data=data2, x='UMAP1', y='UMAP2', hue = 'overlap', s=s, linewidth=0, alpha=alpha, ax=ax)
+sns.scatterplot(data=data2, x='UMAP1', y='UMAP2', hue = 'overlap', s=s, linewidth=0, alpha=alpha, ax=ax, palette=cmr.ember)
 plt.legend(bbox_to_anchor=(1.025, 1), borderaxespad=0)
 ax.set(xticks=[], yticks=[])
 fig.savefig('plots/overlap_expression_20min-combo.pdf', format='pdf', bbox_inches='tight')
